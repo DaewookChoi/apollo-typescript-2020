@@ -1,4 +1,87 @@
-import { defaultMaxListeners } from "stream"
-
 import React from 'react';
-export default () => <>Detail</>;
+import { useParams } from 'react-router-dom';
+import { gql, useQuery } from '@apollo/client';
+import {get} from 'lodash';
+import styled from 'styled-components';
+
+const GET_MOVIE = gql`
+  query getMovie($id: Int!) {
+    movie(id: $id) {
+      id
+      title
+      medium_cover_image
+      language
+      rating
+      description_intro
+    }
+    suggestions(id: $id){
+        id
+        title
+        medium_cover_image
+    }
+  }
+`;
+
+const Container = styled.div`
+  height: 100vh;
+  background-image: linear-gradient(-45deg, #d754ab, #fd723a);
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  color: white;
+`;
+
+const Column = styled.div`
+  margin-left: 10px;
+  width: 50%;
+`;
+
+const Title = styled.h1`
+  font-size: 65px;
+  margin-bottom: 15px;
+`;
+
+const Subtitle = styled.h4`
+  font-size: 35px;
+  margin-bottom: 10px;
+`;
+
+const Description = styled.p`
+  font-size: 28px;
+`;
+
+const Poster = styled.div<{bg: string}>`
+  width: 25%;
+  height: 60%;
+  background-color: transparent;
+  background-image: url(${props => props.bg});
+  background-size: cover;
+  background-position: center center;
+`;
+
+export default () => {
+    const { id }: { id: string } = useParams();
+    const { loading, data } = useQuery(GET_MOVIE, {
+      variables: { id }
+    });
+    const movie = get(data, 'movie');
+
+    console.log(movie);
+    return (
+      <Container>
+        <Column>
+          <Title>
+            {loading
+              ? "Loading..."
+              : `${movie?.title} ${movie?.isLiked ? "💖" : "😞"}`}
+          </Title>
+          <Subtitle>
+            {movie?.language} · {movie?.rating}
+            </Subtitle>
+            <Description>{movie?.description_intro}</Description>
+        </Column>
+        <Poster bg={movie?.medium_cover_image}></Poster>
+      </Container>
+    );
+};
